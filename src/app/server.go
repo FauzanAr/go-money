@@ -2,16 +2,25 @@ package main
 
 import (
 	"net/http"
+	"os"
 
 	"money-management/src/config"
 	"money-management/src/pkg/databases/postgre"
+	"money-management/src/pkg/helpers"
 
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
 	//init database
-	db, _ := postgre.InitConnection()
+	helper.InitLogger()
+	defer helper.Logger.Sync()
+
+	db, err := postgre.InitConnection()
+	if err != nil {
+		helper.Logger.Error(err.Error())
+		os.Exit(1)
+	}
 	defer postgre.CloseConnection(db)
 
 	//init GIN
