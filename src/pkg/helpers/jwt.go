@@ -26,6 +26,11 @@ type JwtConfig struct {
 	issuer		string
 }
 
+type JwtResult struct {
+	AccessToken		string	`json:"access_token"`
+	RefreshToken	string	`json:"refresh_token"`
+}
+
 func Jwt() JwtHelper {
 	return &JwtConfig{
 		secretKey: config.Get().SecretKey,
@@ -35,7 +40,7 @@ func Jwt() JwtHelper {
 
 func (j *JwtConfig) Generate(username string, email string, userId string) utils.Result {
 	var res utils.Result
-	claims := JwtClaims{
+	tokenClaims := JwtClaims{
 		Username: username,
 		Email: email,
 		UserId: userId,
@@ -46,14 +51,33 @@ func (j *JwtConfig) Generate(username string, email string, userId string) utils
 		},
 	}
 
-	plainToken := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
+	plainToken := jwt.NewWithClaims(jwt.SigningMethodHS512, tokenClaims)
 	token, err := plainToken.SignedString([]byte(j.secretKey))
 	if err != nil {
+		Logger.Error("Error while creating JWT token, msg: " + err.Error())
 		res.Error = err
 		return res
 	}
 
-	res.Data = token
+	refreshTokenClaims := jwt.StandardClaims{
+		Issuer: j.issuer,
+		ExpiresAt: time.Now().Add(time.Hour * 24 * 30).Unix(),
+		IssuedAt: time.Now().Unix(),
+	}
+
+	plainRefreshToken := jwt.NewWithClaims(jwt.SigningMethodHS512, refreshTokenClaims)
+	refreshToken, err := plainRefreshToken.SignedString([]byte(j.secretKey))
+	if err != nil {
+		Logger.Error("Error while creating JWT refresh token, msg: " + err.Error())
+		res.Error = err
+		return res
+	}
+
+	result := JwtResult{
+		AccessToken: token,
+		RefreshToken: refreshToken,
+	}
+	res.Data = result
 	return res
 }
 
