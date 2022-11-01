@@ -46,7 +46,7 @@ func (j *JwtConfig) Generate(username string, email string, userId string) utils
 		UserId: userId,
 		StandardClaims: jwt.StandardClaims{
 			Issuer: j.issuer,
-			ExpiresAt: time.Now().Add(time.Hour * 24).Unix(),
+			ExpiresAt: time.Now().Add(time.Hour * 1).Unix(),
 			IssuedAt: time.Now().Unix(),
 		},
 	}

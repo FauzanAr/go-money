@@ -9,13 +9,20 @@ import (
 	"time"
 
 	_ "github.com/lib/pq"
+	"gorm.io/gorm"
+	"gorm.io/driver/postgres"
 )
 
 func InitConnection() (*sql.DB, error) {
-	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable TimeZone=Asia/Jakarta",
 	config.Get().PostgreHost, config.Get().PostgrePort, config.Get().PostgreUsername,
 	config.Get().PostgrePassword, config.Get().PostgreDbName)
-	db, err := sql.Open("postgres", dsn)
+	gorm, err := gorm.Open(postgres.Open(dsn))
+	if err != nil {
+		return nil, err
+	}
+	
+	db, err := gorm.DB()
 	if err != nil {
 		return nil, err
 	}
